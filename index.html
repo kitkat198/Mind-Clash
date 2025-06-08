@@ -1,0 +1,472 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Mind Clash</title>
+  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/3/3b/Brain_icon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    #loading-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: #121212;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      z-index: 9999;
+      font-family: 'Roboto', sans-serif;
+    }
+    #intro-animation {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: #121212;
+      color: #00ffcc;
+      font-size: 2em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9998;
+      animation: introFade 2s ease-out forwards;
+    }
+    @keyframes introFade {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+  
+#leaderboard1, #leaderboard2, #leaderboard3 {
+  margin-top: 20px;
+  background: #f0f0f0;
+  padding: 10px;
+  border-radius: 8px;
+}
+.leaderboard-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+.leaderboard-list {
+  list-style: none;
+  padding-left: 0;
+}
+.leaderboard-list li {
+  margin: 2px 0;
+}
+.reset-btn {
+  margin-top: 8px;
+  font-size: 0.9em;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <audio id="tap-sound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_c00f0216b7.mp3"></audio>
+  <audio id="correct-sound" src="https://cdn.pixabay.com/audio/2021/08/04/audio_25e8ba2e4d.mp3"></audio>
+  <audio id="end-sound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_9e57c9d66b.mp3"></audio>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mind Clash</title>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      transition: all 0.5s ease;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #1f1c2c, #928dab);
+      color: #fff;
+      text-align: center;
+      padding: 2rem;
+      margin: 0;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #2d2a4a;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #00000055;
+    }
+    button {
+      margin: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      background-color: #5e60ce;
+      border: none;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background-color: #6930c3;
+    }
+    #main-menu, #game1, #game2, #game3, #end1, #end2, #end3 {
+      display: none;
+    }
+    input[type="text"], input[type="number"] {
+      padding: 0.5rem;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      border: none;
+      text-align: center;
+      width: 150px;
+      margin-top: 1rem;
+    }
+    h1, h2 {
+      margin-bottom: 1rem;
+    }
+  @keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+#leaderboard1, #leaderboard2, #leaderboard3 {
+  margin-top: 20px;
+  background: #f0f0f0;
+  padding: 10px;
+  border-radius: 8px;
+}
+.leaderboard-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+.leaderboard-list {
+  list-style: none;
+  padding-left: 0;
+}
+.leaderboard-list li {
+  margin: 2px 0;
+}
+.reset-btn {
+  margin-top: 8px;
+  font-size: 0.9em;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- Audio Elements -->
+<audio id="bgMusic" src="background_music.mp3" loop autoplay></audio>
+<audio id="clickSound" src="click_sound.mp3"></audio>
+<audio id="successSound" src="success_chime.mp3"></audio>
+<audio id="errorSound" src="error_buzz.mp3"></audio>
+
+<!-- Mute Toggle -->
+<div style="position: fixed; top: 10px; right: 10px; z-index: 999;">
+  <button onclick="toggleMute()" style="padding: 6px 12px;">🔊 Toggle Sound</button>
+</div>
+
+<div style="text-align: center; padding: 10px;">
+  <label style="font-weight:bold;">
+    <input type="checkbox" id="multiplayerToggle" onchange="toggleMultiplayer()">
+    Multiplayer Mode (Turn-Based)
+  </label>
+  <div id="turnIndicator" style="margin-top: 8px; font-size: 1.1em;"></div>
+</div>
+  <div id="loading-screen">Loading Mind Clash...</div>
+  <div id="intro-animation">⚡ Mind Clash ⚡</div>
+  <script>
+    window.addEventListener('load', () => {
+      document.getElementById('loading-screen').style.display = 'none';
+      const intro = document.getElementById('intro-animation');
+      intro.style.display = 'flex';
+      setTimeout(() => {
+        intro.style.display = 'none';
+      }, 2500);
+    });
+  </script>
+
+<div class="container">
+  <h1>🧠 Mind Clash</h1>
+
+  <div id="main-menu" style="animation: fadeIn 1s;">
+    <h2>Choose a Game</h2>
+    <button onclick="showGame(1)">🔢 Speed Math Duel</button>
+    <button onclick="showGame(2)">🔤 Word Builder</button>
+    <button onclick="showGame(3)">🎯 Reflex Tap</button>
+  </div>
+
+  <div id="game1">
+    <div>⏱ Time: <span id="timer1">30</span>s | 🏆 Score: <span id="score1">0</span></div>
+    <div id="q1" style="font-size:2rem; margin:1rem 0;">Ready?</div>
+    <input type="number" id="a1" disabled />
+    <br>
+    <button onclick="startGame1()">Start</button>
+    <div id="end1">
+      <h2>Game Over!</h2>
+      <p>Score: <span id="final1"></span></p>
+      <button onclick="resetGame(1)">Back to Menu</button>
+    </div>
+  </div>
+
+  <div id="game2">
+    <div>⏱ Time: <span id="timer2">30</span>s | 🏆 Score: <span id="score2">0</span></div>
+    <div id="q2" style="font-size:2rem; margin:1rem 0;">Scrambled: ???</div>
+    <input type="text" id="a2" disabled />
+    <br>
+    <button onclick="startGame2()">Start</button>
+    <div id="end2">
+      <h2>Game Over!</h2>
+      <p>Score: <span id="final2"></span></p>
+      <button onclick="resetGame(2)">Back to Menu</button>
+    </div>
+  </div>
+
+  <div id="game3">
+    <div>⏱ Time: <span id="timer3">30</span>s | 🏆 Score: <span id="score3">0</span></div>
+    <div id="tap-box" style="margin: 1.5rem 0;"></div>
+    <button onclick="startGame3()">Start</button>
+    <div id="end3">
+      <h2>Game Over!</h2>
+      <p>Score: <span id="final3"></span></p>
+      <button onclick="resetGame(3)">Back to Menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById("main-menu").style.display = "block";
+  function showGame(n) {
+    document.getElementById("main-menu").style.display = "none";
+    document.getElementById("game" + n).style.display = "block";
+  }
+  function resetGame(n) {
+    location.reload();
+  }
+  let timer1 = 30, score1 = 0, correct1 = 0, int1;
+  const q1 = document.getElementById("q1");
+  const a1 = document.getElementById("a1");
+  function startGame1() {
+    timer1 = 30; score1 = 0;
+    document.getElementById("timer1").textContent = timer1;
+    document.getElementById("score1").textContent = score1;
+    a1.disabled = false; a1.focus();
+    document.getElementById("end1").style.display = "none";
+    generateMath();
+    int1 = setInterval(() => {
+      timer1--;
+      document.getElementById("timer1").textContent = timer1;
+      if (timer1 <= 0) {
+        clearInterval(int1);
+        a1.disabled = true;
+        showEnd(1, score1);
+        document.getElementById("final1").textContent = score1;
+      }
+    }, 1000);
+  }
+  function generateMath() {
+    const a = Math.floor(Math.random() * 10 + 1);
+    const b = Math.floor(Math.random() * 10 + 1);
+    const ops = ["+", "-", "×"];
+    const op = ops[Math.floor(Math.random() * ops.length)];
+    switch (op) {
+      case "+": correct1 = a + b; break;
+      case "-": correct1 = a - b; break;
+      case "×": correct1 = a * b; break;
+    }
+    q1.textContent = `${a} ${op} ${b} = ?`;
+  }
+  a1.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      if (parseInt(a1.value) === correct1) score1++;
+document.getElementById('correct-sound').play();
+      document.getElementById("score1").textContent = score1;
+      a1.value = "";
+      generateMath();
+    }
+  });
+
+  const words = ["cat", "dog", "moon", "lamp", "tree", "fire", "star", "blue"];
+  let timer2 = 30, score2 = 0, correctWord = "", int2;
+  const q2 = document.getElementById("q2");
+  const a2 = document.getElementById("a2");
+  function startGame2() {
+    timer2 = 30; score2 = 0;
+    document.getElementById("timer2").textContent = timer2;
+    document.getElementById("score2").textContent = score2;
+    a2.disabled = false; a2.focus();
+    document.getElementById("end2").style.display = "none";
+    scrambleWord();
+    int2 = setInterval(() => {
+      timer2--;
+      document.getElementById("timer2").textContent = timer2;
+      if (timer2 <= 0) {
+        clearInterval(int2);
+        a2.disabled = true;
+        showEnd(2, score2);
+        document.getElementById("final2").textContent = score2;
+      }
+    }, 1000);
+  }
+  function scrambleWord() {
+    correctWord = words[Math.floor(Math.random() * words.length)];
+    let scrambled = correctWord.split('').sort(() => 0.5 - Math.random()).join('');
+    q2.textContent = `Scrambled: ${scrambled}`;
+  }
+  a2.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      if (a2.value.toLowerCase() === correctWord) score2++;
+document.getElementById('correct-sound').play();
+      document.getElementById("score2").textContent = score2;
+      a2.value = "";
+      scrambleWord();
+    }
+  });
+
+  let timer3 = 30, score3 = 0, tapReady = false, int3;
+  const tapBox = document.getElementById("tap-box");
+  function startGame3() {
+    timer3 = 30; score3 = 0;
+    document.getElementById("timer3").textContent = timer3;
+    document.getElementById("score3").textContent = score3;
+    document.getElementById("end3").style.display = "none";
+    tapBox.innerHTML = "";
+    tapReady = false;
+    nextTap();
+    int3 = setInterval(() => {
+      timer3--;
+      document.getElementById("timer3").textContent = timer3;
+      if (timer3 <= 0) {
+        clearInterval(int3);
+        tapBox.innerHTML = "";
+        showEnd(3, score3);
+        document.getElementById("final3").textContent = score3;
+      }
+    }, 1000);
+  }
+  function nextTap() {
+    tapBox.innerHTML = "<button onclick='tapNow()'>TAP!</button>";
+    tapReady = true;
+    setTimeout(() => {
+      if (tapReady) nextTap();
+    }, Math.random() * 1000 + 1000);
+  }
+  function tapNow() {
+    if (tapReady) {
+      score3++;
+document.getElementById('tap-sound').play();
+      document.getElementById("score3").textContent = score3;
+      tapReady = false;
+      tapBox.innerHTML = "";
+      setTimeout(nextTap, 500);
+    }
+  }
+</script>
+
+<script>
+function updateLeaderboard(game, score) {
+  const key = `leaderboard${game}`;
+  let scores = JSON.parse(localStorage.getItem(key)) || [];
+  scores.push(score);
+  scores.sort((a, b) => b - a);
+  scores = scores.slice(0, 5);
+  localStorage.setItem(key, JSON.stringify(scores));
+  const ul = document.getElementById("scoreList" + game);
+  ul.innerHTML = scores.map(s => `<li>${s}</li>`).join('');
+}
+
+function resetLeaderboard(game) {
+  localStorage.removeItem(`leaderboard${game}`);
+  document.getElementById("scoreList" + game).innerHTML = "";
+}
+
+// Hook into game ends
+function showEnd(game, score) {
+  updateLeaderboard(game, score);
+  document.getElementById("end" + game).classList.add("fade");
+  document.getElementById("end" + game).style.display = "block";
+  document.getElementById("end-sound").play();
+}
+</script>
+
+<script>
+let multiplayer = false;
+let currentPlayer = 1;
+let scores = {1: 0, 2: 0};
+
+function toggleMultiplayer() {
+  multiplayer = document.getElementById('multiplayerToggle').checked;
+  currentPlayer = 1;
+  scores = {1: 0, 2: 0};
+  document.getElementById('turnIndicator').innerText = multiplayer ? "Player 1's Turn" : "";
+}
+
+function updateScore(game, points) {
+  if (multiplayer) {
+    scores[currentPlayer] += points;
+  }
+}
+
+function switchTurn() {
+  if (multiplayer) {
+    currentPlayer = currentPlayer === 1 ? 2 : 1;
+    document.getElementById('turnIndicator').innerText = `Player ${currentPlayer}'s Turn`;
+  }
+}
+
+function showEnd(game, score) {
+  if (multiplayer) {
+    updateScore(game, score);
+    if (currentPlayer === 2) {
+      const result = scores[1] > scores[2] ? "Player 1 Wins!" :
+                     scores[1] < scores[2] ? "Player 2 Wins!" : "It's a Tie!";
+      alert(`Game Over!\nPlayer 1: ${scores[1]}\nPlayer 2: ${scores[2]}\n${result}`);
+      scores = {1: 0, 2: 0};
+      document.getElementById('turnIndicator').innerText = "";
+    } else {
+      alert("Player 1 finished! Now it's Player 2's turn.");
+    }
+    switchTurn();
+  } else {
+    updateLeaderboard(game, score);
+  }
+
+  document.getElementById("end" + game).classList.add("fade");
+  document.getElementById("end" + game).style.display = "block";
+  document.getElementById("end-sound").play();
+}
+</script>
+
+<script>
+let isMuted = false;
+const bgMusic = document.getElementById("bgMusic");
+const clickSound = document.getElementById("clickSound");
+const successSound = document.getElementById("successSound");
+const errorSound = document.getElementById("errorSound");
+
+function toggleMute() {
+  isMuted = !isMuted;
+  bgMusic.muted = isMuted;
+  clickSound.muted = isMuted;
+  successSound.muted = isMuted;
+  errorSound.muted = isMuted;
+}
+
+function playClick() {
+  if (!isMuted) clickSound.play();
+}
+
+function playSuccess() {
+  if (!isMuted) successSound.play();
+}
+
+function playError() {
+  if (!isMuted) errorSound.play();
+}
+
+// Automatically play music (ensure user interacts first if blocked)
+document.body.addEventListener('click', () => {
+  bgMusic.play().catch(() => {});
+}, { once: true });
+</script>
+
+</body>
+</html>
